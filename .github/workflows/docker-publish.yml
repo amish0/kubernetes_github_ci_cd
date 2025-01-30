@@ -1,0 +1,45 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main   # Trigger the action only when changes are pushed to the 'main' branch
+  pull_request:
+    branches:
+      - main   # Also trigger for pull requests to 'main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # You can change this to other runners (e.g., windows-latest) if needed
+    
+    steps:
+    # Step 1: Checkout the code from the repository
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    # Step 2: Set up Docker Buildx
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    # Step 3: Log in to Docker Hub
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERUSERNAME }}
+        password: ${{ secrets.DOCKERPASSWORD }}
+
+    # Step 4: Build the Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKERUSERNAME }}/flask-app:latest .
+
+    # Step 5: Push Docker image to Docker Hub
+    - name: Push Docker image to Docker Hub
+      run: |
+        docker push ${{ secrets.DOCKERUSERNAME }}/python_flask-app:latest
+
+    # Optionally, you can tag your Docker image with the GitHub commit SHA
+    - name: Push Docker image with commit SHA
+      run: |
+        docker tag ${{ secrets.DOCKERUSERNAME }}/python_flask-app:latest ${{ secrets.DOCKERUSERNAME }}/python_flask-app:${{ github.sha }}
+        docker push ${{ secrets.DOCKERUSERNAME }}/python_flask-app:${{ github.sha }}
